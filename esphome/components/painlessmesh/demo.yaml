@@ -1,0 +1,38 @@
+external_components:
+  - source: github://your-repo/esphome-painlessmesh@main
+
+painlessmesh:
+  ssid: "HomeMeshNetwork"
+  password: !secret mesh_password
+  port: 5555
+  on_message:
+    - message: "STATUS"
+      then:
+        - lambda: |-
+            id(mesh_sender).send_message(x, "STATUS:OK");
+    - then:
+        - logger.log: 
+            format: "Received general message: %s from %u"
+            args: ["message", "from"]
+
+# 发送消息服务
+api:
+  services:
+    - service: send_mesh_message
+      variables:
+        target: int
+        message: string
+      then:
+        - painlessmesh.send:
+            node_id: !lambda 'return target;'
+            message: !lambda 'return message;'
+
+# 自动化示例
+automation:
+  - trigger:
+      platform: time
+      at: "08:00:00"
+    then:
+      - painlessmesh.send:
+          broadcast: true
+          message: "MORNING_ANNOUNCE"
