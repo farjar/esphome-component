@@ -27,6 +27,25 @@ api:
             node_id: !lambda 'return target;'
             message: !lambda 'return message;'
 
+# 定义JSON消息接收器
+lambda: |-
+  auto receiver = id(mesh_component)->make_typed_receiver<JsonObject>();
+  receiver->set_parser([](const std::string &msg, JsonObject &obj) {
+    DynamicJsonDocument doc(256);
+    deserializeJson(doc, msg);
+    obj = doc.as<JsonObject>();
+    return !obj.isNull();
+  });
+  receiver->add_handler([](uint32_t from, const JsonObject &data) {
+    id(sensor).publish_state(data["value"]);
+  });
+
+# 自动化触发
+on_message:
+  - message: "{\"type\":\"status\"}"
+    then:
+      - logger.log: "Received status update"
+      
 # 自动化示例
 automation:
   - trigger:
