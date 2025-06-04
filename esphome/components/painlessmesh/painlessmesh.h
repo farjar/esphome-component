@@ -14,6 +14,24 @@ class MessageReceivedTrigger;
 
 class PainlessMeshComponent : public Component, public network::NetworkListener {
  public:
+  MeshMessageReceiver *make_receiver() {
+    auto receiver = new MeshMessageReceiver();
+    receivers_.push_back(receiver);
+    return receiver;
+  }
+
+  template<typename T>
+  TypedMessageReceiver<T> *make_typed_receiver() {
+    auto receiver = new TypedMessageReceiver<T>();
+    typed_receivers_.push_back(receiver);
+    return receiver;
+  }
+
+ private:
+  std::vector<MeshMessageReceiver*> receivers_;
+  std::vector<void*> typed_receivers_;  // 类型擦除存储
+};
+ public:
   void set_ssid(const std::string &ssid) { ssid_ = ssid; }
   void set_password(const std::string &password) { password_ = password; }
   void set_port(uint16_t port) { port_ = port; }
